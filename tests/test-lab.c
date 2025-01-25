@@ -242,6 +242,134 @@ void test_notInList(void)
   free(data);
 }
 
+void test_addValTestIndex(void)
+{
+  populate_list();
+  //List should be 4->3->2->1->0
+  void *data = alloc_data(2);
+  int idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(2, idx);
+  list_add(lst_, alloc_data(5));
+  //List should be 5->4->3->2->1->0
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(3, idx);
+  free(data);
+}
+
+void test_removeValTestIndex(void)
+{
+  populate_list();
+  //List should be 4->3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 5);
+  void *data = alloc_data(2);
+  int idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(2, idx);
+  int *rval = (int *)list_remove_index(lst_, 0);
+  //List should be 3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  TEST_ASSERT_TRUE(*rval == 4);
+  free(rval);
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(1, idx);
+  free(data);
+}
+
+void test_invalidIndexOfOldVal(void)
+{
+  populate_list();
+  //List should be 4->3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 5);
+  void *data = alloc_data(2);
+  int idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(2, idx);
+  int *rval = (int *)list_remove_index(lst_, idx);
+  //List should be 4->3->1->0
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  TEST_ASSERT_TRUE(*rval == 2);
+  free(rval);
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(-1, idx);
+  free(data);
+}
+
+void test_randomOpsTestIndexOrder(void)
+{
+  populate_list();
+  //List should be 4->3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 5);
+  list_add(lst_, alloc_data(5));
+  list_add(lst_, alloc_data(6));
+  list_add(lst_, alloc_data(7));
+  //List should be 7->6->5->4->3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 8);
+  void *data = alloc_data(3);
+  int idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(4, idx);
+  //List should be 7->6->5->4->3->2->1->0
+  int *rval1 = (int *)list_remove_index(lst_, 2);
+  TEST_ASSERT_TRUE(lst_->size == 7);
+  TEST_ASSERT_TRUE(*rval1 == 5);
+  free(rval1);
+  //List should be 7->6->4->3->2->1->0
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(3, idx);
+  int *rval2 = (int *)list_remove_index(lst_, 1);
+  TEST_ASSERT_TRUE(lst_->size == 6);
+  TEST_ASSERT_TRUE(*rval2 == 6);
+  free(rval2);
+  //List should be 7->4->3->2->1->0
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(2, idx);
+  int *rval3 = (int *)list_remove_index(lst_, 1);
+  TEST_ASSERT_TRUE(lst_->size == 5);
+  TEST_ASSERT_TRUE(*rval3 == 4);
+  free(rval3);
+  //List should be 7->3->2->1->0
+  int *rval4 = (int *)list_remove_index(lst_, 1);
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  TEST_ASSERT_TRUE(*rval4 == 3);
+  free(rval4);
+  //List should be 7->2->1->0 w/ 3 not in the list
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(-1, idx);
+  //List should be 7->2->1->0
+  list_add(lst_, alloc_data(3));
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(0, idx);
+  //List should be 3->7->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 5);
+  int *rval5 = (int *)list_remove_index(lst_, 1);
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  TEST_ASSERT_TRUE(*rval5 == 7);
+  free(rval5);
+  //List should be 3->2->1->0
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  int *rval6 = (int *)list_remove_index(lst_, 3);
+  TEST_ASSERT_TRUE(lst_->size == 3);
+  TEST_ASSERT_TRUE(*rval6 == 0);
+  free(rval6);
+  //List should be 3->2->1
+  list_add(lst_, alloc_data(4));
+  //List should be 4->3->2->1
+  TEST_ASSERT_TRUE(lst_->size == 4);
+  idx = list_indexof(lst_, data);
+  TEST_ASSERT_EQUAL_INT64(1, idx);
+  node_t *curr = lst_->head->next;
+  //List should be 4->3->2->1
+  for (int i = 3; i >= 0; i--)
+    {
+      TEST_ASSERT_TRUE(*((int *)curr->data) == i + 1);
+      curr = curr->next;
+    }
+  curr = lst_->head->prev;
+  for (int i = 0; i <= 3; i++)
+    {
+      TEST_ASSERT_TRUE(*((int *)curr->data) == i + 1);
+      curr = curr->prev;
+    }
+  free(data);
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_create_destroy);
@@ -255,5 +383,9 @@ int main(void) {
   RUN_TEST(test_indexOf0);
   RUN_TEST(test_indexOf3);
   RUN_TEST(test_notInList);
+  RUN_TEST(test_addValTestIndex);
+  RUN_TEST(test_removeValTestIndex);
+  RUN_TEST(test_invalidIndexOfOldVal);
+  RUN_TEST(test_randomOpsTestIndexOrder);
   return UNITY_END();
 }
